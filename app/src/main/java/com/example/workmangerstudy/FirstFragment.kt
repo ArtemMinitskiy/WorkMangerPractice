@@ -6,10 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.work.Data
-import androidx.work.OneTimeWorkRequest
-import androidx.work.PeriodicWorkRequest
-import androidx.work.WorkManager
+import androidx.work.*
 import com.example.workmangerstudy.databinding.FragmentFirstBinding
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -31,7 +28,8 @@ class FirstFragment : Fragment() {
         binding.buttonFirst.setOnClickListener {
 //            setTimeRequest()
 //            setOneTimeRequest()
-            setOneTimeRequestWithData()
+//            setOneTimeRequestWithData()
+            setOneTimeRequestWithDataAndConstraints()
 //            setPeriodicRequest()
 //            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
         }
@@ -74,6 +72,22 @@ class FirstFragment : Fragment() {
 
             }
 
+        }
+    }
+
+    private fun setOneTimeRequestWithDataAndConstraints() {
+        val data: Data = Data.Builder().putString("mKey", "Hello").build()
+        val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+        val notificationRequest: OneTimeWorkRequest = OneTimeWorkRequest.Builder(NotificationWorkManagerWithData::class.java).setConstraints(constraints).setInputData(data).build()
+        val workManager = WorkManager.getInstance(requireContext())
+        workManager.enqueue(notificationRequest)
+        workManager.getWorkInfoByIdLiveData(notificationRequest.id).observe(requireActivity()) {
+            Log.i("mLog", it.state.name)
+            if (it.state.isFinished) {
+                val data = it.outputData
+                val message = data.getString("mKey")
+                Log.i("mLog", "$message")
+            }
         }
     }
 
